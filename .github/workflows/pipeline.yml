@@ -19,13 +19,13 @@ jobs:
         run: bash scripts/build.sh
 
       - name: Upload build artifact (untrusted)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-build
           path: app.py
 
       - name: Download build artifact (no integrity check)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app-build
 
