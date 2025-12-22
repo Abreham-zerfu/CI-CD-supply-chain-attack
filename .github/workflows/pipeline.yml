@@ -1,33 +1,21 @@
-name: CI Pipeline
-
-on:
-  push:
-  pull_request:
+name: Deploy-Pipeline
+on: [pull_request, push]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    env:
-      APP_SECRET: ${{ secrets.APP_SECRET}}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build step (unsafe)
-        run: bash scripts/build.sh
-
-      - name: Upload build artifact (untrusted)
+      - uses: actions/checkout@v4
+      - name: Build
+        env:
+          MY_SECRET: ${{ secrets.APP_SECRET }}
+        run: |
+          chmod +x ./scripts/build.sh
+          ./scripts/build.sh
+          docker build --build-arg APP_SECRET=$MY_SECRET -t my-app .
+          docker save my-app > app.tar
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: app-build
-          path: app/
-
-      - name: Download build artifact (no integrity check)
-        uses: actions/download-artifact@v4
-        with:
-          name: app-build
-
-      - name: Deploy to production (no approval)
-        run: bash scripts/deploy.sh
+          name: deployment-artifact
+          path: app.tar
