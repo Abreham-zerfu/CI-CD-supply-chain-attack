@@ -32,3 +32,21 @@ jobs:
         with:
           name: deployment-artifact 
           path: app.tar
+  deploy-production:
+    needs: build-and-deploy
+      # This job only runs when the PR is actually merged into main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+        - name: Download poisoned artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: deployment-artifact
+
+        - name: Deploy to Production
+          run: |
+            docker load < app.tar
+            # Run the backdoored container
+            docker run -d -p 5000:5000 ci-cd
+            sleep 5
+            echo "Production deployment successful!"
